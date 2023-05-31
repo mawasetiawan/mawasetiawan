@@ -1,16 +1,104 @@
-### Hi there 👋
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ping Pong Game</title>
+    <style>
+        canvas {
+            background-color: #000;
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="pong" width="800" height="400"></canvas>
 
-<!--
-**mawasetiawan/mawasetiawan** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+    <script>
+        const canvas = document.getElementById('pong');
+        const context = canvas.getContext('2d');
 
-Here are some ideas to get you started:
+        // Objek raket
+        const paddleWidth = 10;
+        const paddleHeight = 100;
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+        const player = {
+            x: 0,
+            y: canvas.height / 2 - paddleHeight / 2,
+            width: paddleWidth,
+            height: paddleHeight,
+            color: '#fff',
+            dy: 8 // Kecepatan pergerakan raket
+        };
+
+        const computer = {
+            x: canvas.width - paddleWidth,
+            y: canvas.height / 2 - paddleHeight / 2,
+            width: paddleWidth,
+            height: paddleHeight,
+            color: '#fff',
+            dy: 4 // Kecepatan pergerakan raket komputer
+        };
+
+        // Objek bola
+        const ball = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: 10,
+            speed: 4,
+            dx: 4,
+            dy: 4,
+            color: '#fff'
+        };
+
+        // Fungsi menggambar objek pada canvas
+        function drawRect(x, y, width, height, color) {
+            context.fillStyle = color;
+            context.fillRect(x, y, width, height);
+        }
+
+        function drawCircle(x, y, radius, color) {
+            context.fillStyle = color;
+            context.beginPath();
+            context.arc(x, y, radius, 0, Math.PI * 2, false);
+            context.closePath();
+            context.fill();
+        }
+
+        function drawText(text, x, y, color) {
+            context.fillStyle = color;
+            context.font = '45px fantasy';
+            context.fillText(text, x, y);
+        }
+
+        // Fungsi menggambar net pada tengah lapangan
+        function drawNet() {
+            for (let i = 0; i <= canvas.height; i += 15) {
+                drawRect(canvas.width / 2 - 1, i, 2, 10, '#fff');
+            }
+        }
+
+        // Fungsi menggambar seluruh objek pada canvas
+        function draw() {
+            drawRect(0, 0, canvas.width, canvas.height, '#000');
+
+            drawText(player.score, canvas.width / 4, canvas.height / 5, '#fff');
+            drawText(computer.score, 3 * canvas.width / 4, canvas.height / 5, '#fff');
+
+            drawNet();
+
+            drawRect(player.x, player.y, player.width, player.height, player.color);
+            drawRect(computer.x, computer.y, computer.width, computer.height, computer.color);
+
+            drawCircle(ball.x, ball.y, ball.radius, ball.color);
+        }
+
+        // Fungsi menggerakkan raket pemain
+        function movePaddle() {
+            document.addEventListener('keydown', function(event) {
+                switch(event.keyCode) {
+                    case 38: // Tombol panah atas
+                        if (player.y - player.dy > 0) {
+                            player.y -= player.dy;
+                        }
+                        break;
+                    case 40: // Tombol pan
