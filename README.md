@@ -101,4 +101,81 @@
                             player.y -= player.dy;
                         }
                         break;
-                    case 40: // Tombol pan
+                    case 40: // Tombol panah bawah
+                        if (player.y + player.dy + player.height < canvas.height) {
+                            player.y += player.dy;
+                        }
+                        break;
+                }
+            });
+        }
+
+        // Fungsi menggerakkan raket komputer secara otomatis
+        function moveComputer() {
+            if (computer.y < ball.y && computer.y + computer.height < canvas.height) {
+                computer.y += computer.dy;
+            }
+
+            if (computer.y > ball.y && computer.y > 0) {
+                computer.y -= computer.dy;
+            }
+        }
+
+        // Fungsi menggerakkan bola
+        function moveBall() {
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // Deteksi tabrakan dengan dinding atas/bawah
+            if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
+                ball.dy *= -1;
+            }
+
+            // Deteksi tabrakan dengan raket pemain
+            if (
+                ball.x - ball.radius < player.x + player.width &&
+                ball.y > player.y &&
+                ball.y < player.y + player.height
+            ) {
+                ball.dx *= -1;
+            }
+
+            // Deteksi tabrakan dengan raket komputer
+            if (
+                ball.x + ball.radius > computer.x &&
+                ball.y > computer.y &&
+                ball.y < computer.y + computer.height
+            ) {
+                ball.dx *= -1;
+            }
+
+            // Deteksi bola keluar dari layar
+            if (ball.x - ball.radius < 0) {
+                computer.score++;
+                resetBall();
+            } else if (ball.x + ball.radius > canvas.width) {
+                player.score++;
+                resetBall();
+            }
+        }
+
+        // Fungsi mengatur posisi awal bola
+        function resetBall() {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.dx = -ball.dx;
+        }
+
+        // Fungsi utama permainan
+        function game() {
+            draw();
+            movePaddle();
+            moveComputer();
+            moveBall();
+        }
+
+        // Loop permainan
+        setInterval(game, 1000 / 60); // 60 FPS
+    </script>
+</body>
+</html>
