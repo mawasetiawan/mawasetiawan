@@ -12,8 +12,28 @@
             height: 100vh;
         }
 
-        canvas {
-            border: 1px solid #000;
+        #login {
+            background-color: #f0f0f0;
+            padding: 20px;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        #nameInput {
+            margin-bottom: 10px;
+        }
+
+        .emoji-option {
+            margin: 5px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .emoji-option.selected {
+            color: red;
         }
 
         #notification {
@@ -27,97 +47,79 @@
             display: none;
         }
 
-        #login {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #f0f0f0;
-            padding: 20px;
-            border-radius: 5px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
-
-        #profile-selection {
-            display: flex;
-            margin-bottom: 20px;
-        }
-
-        .profile-image {
-            width: 60px;
-            height: 60px;
-            border: 2px solid #000;
-            margin-right: 10px;
-            cursor: pointer;
-        }
-
-        .profile-image.active {
-            border-color: #ff0000;
+        #gameCanvas {
+            width: 1920px;
+            height: 1080px;
+            background-color: #000;
+            display: none;
         }
     </style>
 </head>
 <body>
+    <div id="login">
+        <h2>Login</h2>
+        <input type="text" id="nameInput" placeholder="Your Name">
+        <div id="emojiSelection">
+            <span class="emoji-option" onclick="selectEmoji(0)">&#x1F600;</span>
+            <span class="emoji-option" onclick="selectEmoji(1)">&#x1F601;</span>
+            <span class="emoji-option" onclick="selectEmoji(2)">&#x1F602;</span>
+            <span class="emoji-option" onclick="selectEmoji(3)">&#x1F603;</span>
+            <span class="emoji-option" onclick="selectEmoji(4)">&#x1F604;</span>
+            <span class="emoji-option" onclick="selectEmoji(5)">&#x1F605;</span>
+            <span class="emoji-option" onclick="selectEmoji(6)">&#x1F606;</span>
+            <span class="emoji-option" onclick="selectEmoji(7)">&#x1F607;</span>
+            <span class="emoji-option" onclick="selectEmoji(8)">&#x1F608;</span>
+            <span class="emoji-option" onclick="selectEmoji(9)">&#x1F609;</span>
+        </div>
+        <button onclick="login()">Login</button>
+    </div>
+
     <canvas id="gameCanvas"></canvas>
 
     <div id="notification"></div>
 
-    <div id="login">
-        <h2>Welcome to the Game</h2>
-        <input type="text" id="nameInput" placeholder="Your Name">
-        <div id="profile-selection">
-            <div class="profile-image" onclick="selectProfile(0)"></div>
-            <div class="profile-image" onclick="selectProfile(1)"></div>
-            <div class="profile-image" onclick="selectProfile(2)"></div>
-            <div class="profile-image" onclick="selectProfile(3)"></div>
-            <div class="profile-image" onclick="selectProfile(4)"></div>
-        </div>
-        <button onclick="startGame()">Start</button>
-    </div>
-
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const context = canvas.getContext('2d');
-
-        const notification = document.getElementById('notification');
         const login = document.getElementById('login');
         const nameInput = document.getElementById('nameInput');
-        const profileImages = document.querySelectorAll('.profile-image');
+        const emojiOptions = document.querySelectorAll('.emoji-option');
+        const gameCanvas = document.getElementById('gameCanvas');
+        const notification = document.getElementById('notification');
 
         let player = {
             name: '',
-            profileImage: ''
+            emoji: ''
         };
 
         let gameStarted = false;
 
-        function selectProfile(index) {
-            profileImages.forEach((image, i) => {
+        function selectEmoji(index) {
+            emojiOptions.forEach((emoji, i) => {
                 if (i === index) {
-                    image.classList.add('active');
+                    emoji.classList.add('selected');
                 } else {
-                    image.classList.remove('active');
+                    emoji.classList.remove('selected');
                 }
             });
 
-            player.profileImage = `https://this-person-does-not-exist.com/image${index}.jpg`;
+            player.emoji = emojiOptions[index].innerHTML;
         }
 
-        function startGame() {
+        function login() {
             const name = nameInput.value.trim();
-            if (name === '' || player.profileImage === '') {
+
+            if (name === '' || player.emoji === '') {
+                showNotification('Please enter your name and select an emoji.');
                 return;
             }
 
             player.name = name;
+
             login.style.display = 'none';
-            canvas.style.display = 'block';
+            gameCanvas.style.display = 'block';
             gameStarted = true;
 
-            drawPlayer();
-            startAnimation();
+            // Start game logic
+            // ...
         }
 
         function showNotification(message) {
@@ -128,49 +130,14 @@
             }, 2000);
         }
 
-        function drawPlayer() {
-            const img = new Image();
-            img.src = player.profileImage;
+        document.addEventListener('keydown', (event) => {
+            if (!gameStarted) return;
 
-            img.onload = () => {
-                context.clearRect(0, 0, canvas.width, canvas.height);
-                context.drawImage(img, canvas.width / 2 - 30, canvas.height / 2 - 30, 60, 60);
-                context.fillStyle = '#000';
-                context.font = '12px Arial';
-                context.fillText(player.name, canvas.width / 2 - (player.name.length * 2.5), canvas.height / 2 + 40);
-            };
-        }
+            const key = event.key.toLowerCase();
 
-        function startAnimation() {
-            if (!gameStarted) {
-                return;
-            }
-
-            context.clearRect(0, 0, canvas.width, canvas.height);
-            context.fillStyle = '#ff0000';
-            context.fillRect(Math.random() * (canvas.width - 20), Math.random() * (canvas.height - 20), 20, 20);
-
-            requestAnimationFrame(startAnimation);
-        }
-
-        function handleKeyPress(event) {
-            if (!gameStarted) {
-                return;
-            }
-
-            const key = event.key;
-
-            // Handle movement logic based on key press
+            // Handle movement logic based on key press (W, A, S, D)
             // ...
-
-            // Check collision with zombie and perform action
-            // ...
-
-            // Check if player is dead and show notification
-            // ...
-        }
-
-        document.addEventListener('keypress', handleKeyPress);
+        });
     </script>
 </body>
 </html>
