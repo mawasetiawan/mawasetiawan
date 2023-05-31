@@ -1,181 +1,176 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Ping Pong Game</title>
+    <title>Game</title>
     <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
         canvas {
-            background-color: #000;
-            display: block;
-            margin: 0 auto;
+            border: 1px solid #000;
+        }
+
+        #notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        #login {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #f0f0f0;
+            padding: 20px;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        #profile-selection {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .profile-image {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #000;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .profile-image.active {
+            border-color: #ff0000;
         }
     </style>
 </head>
 <body>
-    <canvas id="pong" width="800" height="400"></canvas>
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="notification"></div>
+
+    <div id="login">
+        <h2>Welcome to the Game</h2>
+        <input type="text" id="nameInput" placeholder="Your Name">
+        <div id="profile-selection">
+            <div class="profile-image" onclick="selectProfile(0)"></div>
+            <div class="profile-image" onclick="selectProfile(1)"></div>
+            <div class="profile-image" onclick="selectProfile(2)"></div>
+            <div class="profile-image" onclick="selectProfile(3)"></div>
+            <div class="profile-image" onclick="selectProfile(4)"></div>
+        </div>
+        <button onclick="startGame()">Start</button>
+    </div>
 
     <script>
-        const canvas = document.getElementById('pong');
+        const canvas = document.getElementById('gameCanvas');
         const context = canvas.getContext('2d');
 
-        // Objek raket
-        const paddleWidth = 10;
-        const paddleHeight = 100;
+        const notification = document.getElementById('notification');
+        const login = document.getElementById('login');
+        const nameInput = document.getElementById('nameInput');
+        const profileImages = document.querySelectorAll('.profile-image');
 
-        const player = {
-            x: 0,
-            y: canvas.height / 2 - paddleHeight / 2,
-            width: paddleWidth,
-            height: paddleHeight,
-            color: '#fff',
-            dy: 8 // Kecepatan pergerakan raket
+        let player = {
+            name: '',
+            profileImage: ''
         };
 
-        const computer = {
-            x: canvas.width - paddleWidth,
-            y: canvas.height / 2 - paddleHeight / 2,
-            width: paddleWidth,
-            height: paddleHeight,
-            color: '#fff',
-            dy: 4 // Kecepatan pergerakan raket komputer
-        };
+        let gameStarted = false;
 
-        // Objek bola
-        const ball = {
-            x: canvas.width / 2,
-            y: canvas.height / 2,
-            radius: 10,
-            speed: 4,
-            dx: 4,
-            dy: 4,
-            color: '#fff'
-        };
-
-        // Fungsi menggambar objek pada canvas
-        function drawRect(x, y, width, height, color) {
-            context.fillStyle = color;
-            context.fillRect(x, y, width, height);
-        }
-
-        function drawCircle(x, y, radius, color) {
-            context.fillStyle = color;
-            context.beginPath();
-            context.arc(x, y, radius, 0, Math.PI * 2, false);
-            context.closePath();
-            context.fill();
-        }
-
-        function drawText(text, x, y, color) {
-            context.fillStyle = color;
-            context.font = '45px fantasy';
-            context.fillText(text, x, y);
-        }
-
-        // Fungsi menggambar net pada tengah lapangan
-        function drawNet() {
-            for (let i = 0; i <= canvas.height; i += 15) {
-                drawRect(canvas.width / 2 - 1, i, 2, 10, '#fff');
-            }
-        }
-
-        // Fungsi menggambar seluruh objek pada canvas
-        function draw() {
-            drawRect(0, 0, canvas.width, canvas.height, '#000');
-
-            drawText(player.score, canvas.width / 4, canvas.height / 5, '#fff');
-            drawText(computer.score, 3 * canvas.width / 4, canvas.height / 5, '#fff');
-
-            drawNet();
-
-            drawRect(player.x, player.y, player.width, player.height, player.color);
-            drawRect(computer.x, computer.y, computer.width, computer.height, computer.color);
-
-            drawCircle(ball.x, ball.y, ball.radius, ball.color);
-        }
-
-        // Fungsi menggerakkan raket pemain
-        function movePaddle() {
-            document.addEventListener('keydown', function(event) {
-                switch(event.keyCode) {
-                    case 38: // Tombol panah atas
-                        if (player.y - player.dy > 0) {
-                            player.y -= player.dy;
-                        }
-                        break;
-                    case 40: // Tombol panah bawah
-                        if (player.y + player.dy + player.height < canvas.height) {
-                            player.y += player.dy;
-                        }
-                        break;
+        function selectProfile(index) {
+            profileImages.forEach((image, i) => {
+                if (i === index) {
+                    image.classList.add('active');
+                } else {
+                    image.classList.remove('active');
                 }
             });
+
+            player.profileImage = `https://this-person-does-not-exist.com/image${index}.jpg`;
         }
 
-        // Fungsi menggerakkan raket komputer secara otomatis
-        function moveComputer() {
-            if (computer.y < ball.y && computer.y + computer.height < canvas.height) {
-                computer.y += computer.dy;
+        function startGame() {
+            const name = nameInput.value.trim();
+            if (name === '' || player.profileImage === '') {
+                return;
             }
 
-            if (computer.y > ball.y && computer.y > 0) {
-                computer.y -= computer.dy;
-            }
+            player.name = name;
+            login.style.display = 'none';
+            canvas.style.display = 'block';
+            gameStarted = true;
+
+            drawPlayer();
+            startAnimation();
         }
 
-        // Fungsi menggerakkan bola
-        function moveBall() {
-            ball.x += ball.dx;
-            ball.y += ball.dy;
-
-            // Deteksi tabrakan dengan dinding atas/bawah
-            if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
-                ball.dy *= -1;
-            }
-
-            // Deteksi tabrakan dengan raket pemain
-            if (
-                ball.x - ball.radius < player.x + player.width &&
-                ball.y > player.y &&
-                ball.y < player.y + player.height
-            ) {
-                ball.dx *= -1;
-            }
-
-            // Deteksi tabrakan dengan raket komputer
-            if (
-                ball.x + ball.radius > computer.x &&
-                ball.y > computer.y &&
-                ball.y < computer.y + computer.height
-            ) {
-                ball.dx *= -1;
-            }
-
-            // Deteksi bola keluar dari layar
-            if (ball.x - ball.radius < 0) {
-                computer.score++;
-                resetBall();
-            } else if (ball.x + ball.radius > canvas.width) {
-                player.score++;
-                resetBall();
-            }
+        function showNotification(message) {
+            notification.innerText = message;
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 2000);
         }
 
-        // Fungsi mengatur posisi awal bola
-        function resetBall() {
-            ball.x = canvas.width / 2;
-            ball.y = canvas.height / 2;
-            ball.dx = -ball.dx;
+        function drawPlayer() {
+            const img = new Image();
+            img.src = player.profileImage;
+
+            img.onload = () => {
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                context.drawImage(img, canvas.width / 2 - 30, canvas.height / 2 - 30, 60, 60);
+                context.fillStyle = '#000';
+                context.font = '12px Arial';
+                context.fillText(player.name, canvas.width / 2 - (player.name.length * 2.5), canvas.height / 2 + 40);
+            };
         }
 
-        // Fungsi utama permainan
-        function game() {
-            draw();
-            movePaddle();
-            moveComputer();
-            moveBall();
+        function startAnimation() {
+            if (!gameStarted) {
+                return;
+            }
+
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.fillStyle = '#ff0000';
+            context.fillRect(Math.random() * (canvas.width - 20), Math.random() * (canvas.height - 20), 20, 20);
+
+            requestAnimationFrame(startAnimation);
         }
 
-        // Loop permainan
-        setInterval(game, 1000 / 60); // 60 FPS
+        function handleKeyPress(event) {
+            if (!gameStarted) {
+                return;
+            }
+
+            const key = event.key;
+
+            // Handle movement logic based on key press
+            // ...
+
+            // Check collision with zombie and perform action
+            // ...
+
+            // Check if player is dead and show notification
+            // ...
+        }
+
+        document.addEventListener('keypress', handleKeyPress);
     </script>
 </body>
 </html>
